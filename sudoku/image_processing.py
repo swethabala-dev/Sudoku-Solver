@@ -2,10 +2,11 @@ import cv2
 import numpy as np
 
 
+
 def load_image(uploaded_file):
     """
-    Converts a Streamlit uploaded file into
-    an OpenCV image.
+    Converts a Streamlit uploaded file
+    into an OpenCV image.
     """
 
     file_bytes = np.asarray(
@@ -21,38 +22,44 @@ def load_image(uploaded_file):
     return image
 
 
+
 def to_grayscale(image):
     """
-    Converts a color image to grayscale.
+    Converts image from BGR color
+    to grayscale.
     """
 
-    return cv2.cvtColor(
+    gray = cv2.cvtColor(
         image,
         cv2.COLOR_BGR2GRAY
     )
 
+    return gray
+
+
 
 def blur_image(gray):
     """
-    Applies Gaussian Blur to reduce noise.
+    Applies Gaussian blur to reduce noise.
     """
 
-    return cv2.GaussianBlur(
+    blurred = cv2.GaussianBlur(
         gray,
         (5, 5),
         0
     )
 
+    return blurred
+
+
 
 def threshold_image(blurred):
     """
-    Converts the image into black and white
-    using adaptive thresholding.
-
-    This helps highlight the Sudoku grid.
+    Converts image into binary form.
+    Helps highlight Sudoku grid lines.
     """
 
-    thresh = cv2.adaptiveThreshold(
+    threshold = cv2.adaptiveThreshold(
         blurred,
         255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
@@ -61,7 +68,93 @@ def threshold_image(blurred):
         2
     )
 
-    # Invert colors so grid lines become white
-    thresh = cv2.bitwise_not(thresh)
 
-    return thresh
+    # Invert image
+    threshold = cv2.bitwise_not(
+        threshold
+    )
+
+
+    return threshold
+
+
+
+def find_contours(threshold):
+    """
+    Finds all contours in the image.
+    """
+
+    contours, _ = cv2.findContours(
+        threshold,
+        cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE
+    )
+
+
+    return contours
+
+
+
+def find_sudoku_grid(contours):
+    """
+    Finds the largest 4-sided contour.
+    The Sudoku board should be a square.
+    """
+
+    largest_area = 0
+    sudoku_contour = None
+
+
+    for contour in contours:
+
+        area = cv2.contourArea(
+            contour
+        )
+
+
+        if area > largest_area:
+
+            perimeter = cv2.arcLength(
+                contour,
+                True
+            )
+
+
+            corners = cv2.approxPolyDP(
+                contour,
+                0.02 * perimeter,
+                True
+            )
+
+
+            # Sudoku board should have 4 corners
+            if len(corners) == 4:
+
+                largest_area = area
+                sudoku_contour = corners
+
+
+    return sudoku_contour
+
+
+
+def draw_grid(image, contour):
+    """
+    Draws detected Sudoku outline.
+    """
+
+    output = image.copy()
+
+
+    if contour is not None:
+
+        cv2.drawContours(
+            output,
+            [contour],
+            -1,
+            (0,255,0),
+            3
+        )
+
+
+    return output

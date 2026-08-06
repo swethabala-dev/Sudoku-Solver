@@ -11,9 +11,9 @@ from sudoku.image_processing import (
 )
 
 
-# -----------------------------
+# 
 # Page Configuration
-# -----------------------------
+# 
 st.set_page_config(
     page_title="Sudoku Solver",
     page_icon="🧩",
@@ -21,9 +21,9 @@ st.set_page_config(
 )
 
 
-# -----------------------------
+# 
 # Title
-# -----------------------------
+# 
 st.title("🧩 Sudoku Solver")
 
 st.write(
@@ -38,18 +38,18 @@ st.write(
 )
 
 
-# -----------------------------
+# 
 # Upload Sudoku Image
-# -----------------------------
+# 
 uploaded_file = st.file_uploader(
     "Upload a Sudoku image",
     type=["png", "jpg", "jpeg"]
 )
 
 
-# -----------------------------
+# 
 # Process Image
-# -----------------------------
+# 
 if uploaded_file is not None:
 
     # Load image

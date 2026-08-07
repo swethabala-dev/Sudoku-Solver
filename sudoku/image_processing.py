@@ -155,6 +155,74 @@ def draw_grid(image, contour):
             (0,255,0),
             3
         )
-
-
     return output
+# straigten the uploaded image 
+def order_points(points):
+    
+    ##Orders the four corner points:
+    #top-left, top-right,
+    #bottom-right, bottom-left
+    
+
+    points = points.reshape(4, 2)
+
+    ordered = np.zeros((4, 2), dtype="float32")
+
+    s = points.sum(axis=1)
+
+    ordered[0] = points[np.argmin(s)]
+    ordered[2] = points[np.argmax(s)]
+
+    diff = np.diff(points, axis=1)
+
+    ordered[1] = points[np.argmin(diff)]
+    ordered[3] = points[np.argmax(diff)]
+
+    return ordered
+
+# warp the sudoku image 
+def warp_perspective(image, contour):
+    """
+    Straightens the Sudoku board using
+    a perspective transform.
+    """
+
+    if contour is None:
+        return None
+
+    corners = order_points(contour)
+
+    (tl, tr, br, bl) = corners
+
+    width = max(
+        np.linalg.norm(br - bl),
+        np.linalg.norm(tr - tl)
+    )
+
+    height = max(
+        np.linalg.norm(tr - br),
+        np.linalg.norm(tl - bl)
+    )
+
+    side = int(max(width, height))
+
+    destination = np.array([
+        [0, 0],
+        [side - 1, 0],
+        [side - 1, side - 1],
+        [0, side - 1]
+    ], dtype="float32")
+
+    matrix = cv2.getPerspectiveTransform(
+        corners,
+        destination
+    )
+
+    warped = cv2.warpPerspective(
+        image,
+        matrix,
+        (side, side)
+    )
+
+    return warped
+    

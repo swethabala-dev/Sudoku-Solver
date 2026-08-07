@@ -7,9 +7,9 @@ from sudoku.image_processing import (
     threshold_image,
     find_contours,
     find_sudoku_grid,
-    draw_grid
+    draw_grid,
+    warp_perspective
 )
-
 
 # 
 # Page Configuration
@@ -130,3 +130,16 @@ if uploaded_file is not None:
         st.warning(
             "Could not detect Sudoku grid. Try another image."
         )
+#Display the straigtend sudoku grid
+
+warped = warp_perspective(image, grid)
+
+if warped is not None:
+
+    st.subheader("Straightened Sudoku")
+
+    st.image(
+        warped,
+        channels="BGR",
+        use_container_width=True
+    )

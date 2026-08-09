@@ -225,4 +225,35 @@ def warp_perspective(image, contour):
     )
 
     return warped
-    
+
+# 9x9 python squares individual
+def split_into_cells(warped):
+    """
+    Splits the straightened Sudoku board
+    into 81 individual cells.
+    """
+
+    cells = []
+
+    height, width = warped.shape[:2]
+
+    cell_height = height // 9
+    cell_width = width // 9
+
+    for row in range(9):
+        row_cells = []
+
+        for col in range(9):
+            y1 = row * cell_height
+            y2 = (row + 1) * cell_height
+
+            x1 = col * cell_width
+            x2 = (col + 1) * cell_width
+
+            cell = warped[y1:y2, x1:x2]
+
+            row_cells.append(cell)
+
+        cells.append(row_cells)
+
+    return cells    

@@ -8,7 +8,8 @@ from sudoku.image_processing import (
     find_contours,
     find_sudoku_grid,
     draw_grid,
-    warp_perspective
+    warp_perspective,
+    split_into_cells
 )
 
 # 
@@ -143,3 +144,36 @@ if warped is not None:
         channels="BGR",
         use_container_width=True
     )
+# Perspective Transformation
+
+warped = warp_perspective(image, grid)
+
+if warped is not None:
+
+    st.subheader("Straightened Sudoku")
+
+    st.image(
+        warped,
+        channels="BGR",
+        use_container_width=True
+    )
+
+
+    # Split Sudoku into 81 Cells
+    
+    cells = split_into_cells(warped)
+
+    st.subheader("Sudoku Cells")
+
+    for row in range(9):
+
+        columns = st.columns(9)
+
+        for col in range(9):
+
+            with columns[col]:
+                st.image(
+                    cells[row][col],
+                    channels="BGR",
+                    use_container_width=True
+                )

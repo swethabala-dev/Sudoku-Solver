@@ -1,12 +1,24 @@
-# Virtual Environment
+# Virtual environment
 venv/
+.venv/
 
-# Python
+# Python cache
 __pycache__/
 *.py[cod]
 
 # macOS
 .DS_Store
 
-# VS Code
+# Streamlit
+.streamlit/secrets.toml
+
+# IDE
 .vscode/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python build files
+*.egg-info/
+dist/
+build/

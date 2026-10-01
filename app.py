@@ -12,9 +12,14 @@ from sudoku.image_processing import (
     split_into_cells
 )
 
-# 
+from sudoku.digit_recognition import detect_digits
+from sudoku.solver import solve_sudoku
+
+
+# --------------------------------------------------
 # Page Configuration
-# 
+# --------------------------------------------------
+
 st.set_page_config(
     page_title="Sudoku Solver",
     page_icon="🧩",
@@ -22,42 +27,43 @@ st.set_page_config(
 )
 
 
-# 
+# --------------------------------------------------
 # Title
-# 
+# --------------------------------------------------
+
 st.title("🧩 Sudoku Solver")
 
 st.write(
     """
     Upload a picture of a Sudoku puzzle and the app will
-    detect the grid, recognize the numbers, and solve it.
-
-    Current stage:
-    - Image preprocessing
-    - Sudoku grid detection
+    detect the grid, recognize the numbers using a PyTorch
+    CNN, and solve it.
     """
 )
 
 
-# 
+# --------------------------------------------------
 # Upload Sudoku Image
-# 
+# --------------------------------------------------
+
 uploaded_file = st.file_uploader(
     "Upload a Sudoku image",
     type=["png", "jpg", "jpeg"]
 )
 
 
-# 
+# --------------------------------------------------
 # Process Image
-# 
+# --------------------------------------------------
+
 if uploaded_file is not None:
 
-    # Load image
+    # --------------------------------------------------
+    # Load Image
+    # --------------------------------------------------
+
     image = load_image(uploaded_file)
 
-
-    # Original image
     st.subheader("Original Image")
 
     st.image(
@@ -67,7 +73,10 @@ if uploaded_file is not None:
     )
 
 
-    # Convert to grayscale
+    # --------------------------------------------------
+    # Convert to Grayscale
+    # --------------------------------------------------
+
     gray = to_grayscale(image)
 
     st.subheader("Grayscale")
@@ -78,7 +87,10 @@ if uploaded_file is not None:
     )
 
 
-    # Blur image
+    # --------------------------------------------------
+    # Blur Image
+    # --------------------------------------------------
+
     blurred = blur_image(gray)
 
     st.subheader("Blurred")
@@ -89,7 +101,10 @@ if uploaded_file is not None:
     )
 
 
-    # Threshold image
+    # --------------------------------------------------
+    # Threshold Image
+    # --------------------------------------------------
+
     threshold = threshold_image(blurred)
 
     st.subheader("Threshold")
@@ -100,20 +115,28 @@ if uploaded_file is not None:
     )
 
 
-    # Find contours
+    # --------------------------------------------------
+    # Find Contours
+    # --------------------------------------------------
+
     contours = find_contours(threshold)
 
 
-    # Find Sudoku grid
+    # --------------------------------------------------
+    # Find Sudoku Grid
+    # --------------------------------------------------
+
     grid = find_sudoku_grid(contours)
 
 
-    # Draw grid
+    # --------------------------------------------------
+    # Draw Detected Grid
+    # --------------------------------------------------
+
     detected_image = draw_grid(
         image,
         grid
     )
-
 
     st.subheader("Detected Sudoku Grid")
 
@@ -124,56 +147,133 @@ if uploaded_file is not None:
     )
 
 
-    if grid is not None:
-        st.success("Sudoku grid detected!")
+    # --------------------------------------------------
+    # Check Grid Detection
+    # --------------------------------------------------
+
+    if grid is None:
+
+        st.warning(
+            "Could not detect Sudoku grid. "
+            "Try another image."
+        )
 
     else:
-        st.warning(
-            "Could not detect Sudoku grid. Try another image."
+
+        st.success(
+            "Sudoku grid detected!"
         )
-#Display the straigtend sudoku grid
-
-warped = warp_perspective(image, grid)
-
-if warped is not None:
-
-    st.subheader("Straightened Sudoku")
-
-    st.image(
-        warped,
-        channels="BGR",
-        use_container_width=True
-    )
-# Perspective Transformation
-
-warped = warp_perspective(image, grid)
-
-if warped is not None:
-
-    st.subheader("Straightened Sudoku")
-
-    st.image(
-        warped,
-        channels="BGR",
-        use_container_width=True
-    )
 
 
-    # Split Sudoku into 81 Cells
-    
-    cells = split_into_cells(warped)
+        # --------------------------------------------------
+        # Perspective Transformation
+        # --------------------------------------------------
 
-    st.subheader("Sudoku Cells")
+        warped = warp_perspective(
+            image,
+            grid
+        )
 
-    for row in range(9):
 
-        columns = st.columns(9)
+        if warped is not None:
 
-        for col in range(9):
+            st.subheader(
+                "Straightened Sudoku"
+            )
 
-            with columns[col]:
-                st.image(
-                    cells[row][col],
-                    channels="BGR",
-                    use_container_width=True
+            st.image(
+                warped,
+                channels="BGR",
+                use_container_width=True
+            )
+
+
+            # --------------------------------------------------
+            # Split Sudoku into 81 Cells
+            # --------------------------------------------------
+
+            cells = split_into_cells(
+                warped
+            )
+
+            st.subheader(
+                "Sudoku Cells"
+            )
+
+
+            for row in range(9):
+
+                columns = st.columns(9)
+
+                for col in range(9):
+
+                    with columns[col]:
+
+                        st.image(
+                            cells[row][col],
+                            channels="BGR",
+                            use_container_width=True
+                        )
+
+
+            # --------------------------------------------------
+            # Recognize Digits with PyTorch CNN
+            # --------------------------------------------------
+
+            board = detect_digits(
+                cells
+            )
+
+            st.subheader(
+                "Recognized Sudoku"
+            )
+
+
+            for row in board:
+
+                st.write(
+                    " ".join(
+                        str(num)
+                        if num != 0
+                        else "."
+                        for num in row
+                    )
+                )
+
+
+            # --------------------------------------------------
+            # Solve Sudoku
+            # --------------------------------------------------
+
+            solved_board = [
+                row[:]
+                for row in board
+            ]
+
+
+            if solve_sudoku(
+                solved_board
+            ):
+
+                st.subheader(
+                    "Solved Sudoku"
+                )
+
+
+                for row in solved_board:
+
+                    st.write(
+                        " ".join(
+                            str(num)
+                            for num in row
+                        )
+                    )
+
+
+            else:
+
+                st.error(
+                    "Could not solve the detected Sudoku. "
+                    "The CNN may have incorrectly recognized "
+                    "one or more digits."
                 )
